@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#111318">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ferramentas">
+<link rel="manifest" href="manifest.json">
+<title>Ferramentas</title>
+<style>
+:root{
+  --bg:#111318;
+  --surface:#1a1d24;
+  --surface-2:#22262f;
+  --border:#2c3040;
+  --border-hi:#3d4358;
+  --text:#e8eaf0;
+  --muted:#8a90a4;
+  --faint:#525870;
+  --blue:#4f8ef7;
+  --blue-soft:#1a2444;
+  --blue-dim:#1e2a4a;
+  --green:#5db87a;
+  --green-soft:#1a3025;
+  --amber:#e8a830;
+  --amber-soft:#2e2410;
+  --red-soft:#2e1818;
+  --red:#c46060;
+  --sans:-apple-system,system-ui,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+  --serif:Georgia,'Palatino Linotype',Palatino,'Times New Roman',serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --r:13px;
+  --pro:#4f8ef7;
+  --pes:#5db87a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--sans);
+  font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  padding-bottom:calc(70px + env(safe-area-inset-bottom));
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input,textarea,select{font-family:inherit;font-size:16px;}
+::placeholder{color:var(--faint);}
+a{color:inherit;text-decoration:none;}
+
+/* ── Header ── */
+header{
+  padding:20px 18px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+}
+.logo{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#1e2a4a 0%,#1a3025 100%);
+  border:1px solid var(--border-hi);
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;
+}
+header h1{font-size:20px;font-weight:700;letter-spacing:-.3px;}
+header .count{
+  margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint);
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 10px;
+}
+
+/* ── Nav ── */
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  background:rgba(17,19,24,.95);backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+}
+nav button{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 2px;color:var(--faint);font-size:10px;font-weight:700;
+  letter-spacing:.5px;text-transform:uppercase;border-radius:10px;
+}
+nav button .ic{font-size:18px;line-height:1;}
+nav button.on{color:var(--blue);}
+
+main{padding:16px 16px 24px;max-width:680px;margin:0 auto;}
+.view{display:none;}
+.view.active{display:block;}
+
+/* ── Filtros ── */
+.toolbar{display:flex;gap:8px;margin-bottom:14px;align-items:center;}
+.search{
+  flex:1;display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0 12px;
+}
+.search input{flex:1;background:none;border:none;color:var(--text);padding:12px 0;outline:none;}
+.chips{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;
+  scrollbar-width:none;margin-bottom:14px;}
+.chips::-webkit-scrollbar{display:none;}
+.chip{
+  flex-shrink:0;padding:7px 14px;border-radius:20px;
+  border:1px solid var(--border);background:var(--surface);
+  font-size:12px;font-weight:700;color:var(--muted);font-family:var(--mono);
+  letter-spacing:.3px;white-space:nowrap;
+}
+.chip.on{background:var(--blue-dim);color:var(--blue);border-color:var(--blue);}
+.chip.pro.on{background:var(--blue-dim);color:var(--pro);border-color:var(--pro);}
+.chip.pes.on{background:var(--green-soft);color:var(--pes);border-color:var(--pes);}
+
+/* ── Seção ── */
+.secao-label{
+  display:flex;align-items:center;gap:10px;margin:20px 0 10px;
+}
+.secao-label .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.secao-label .dot.pro{background:var(--pro);}
+.secao-label .dot.pes{background:var(--pes);}
+.secao-label span{font-family:var(--mono);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);}
+.secao-label .line{flex:1;height:1px;background:var(--border);}
+
+/* ── Card de ferramenta ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:16px 16px 14px;margin-bottom:10px;
+  transition:border-color .15s;
+}
+.card:active{border-color:var(--border-hi);}
+.btn-abrir{
+  flex-shrink:0;align-self:center;
+  padding:9px 14px;border-radius:20px;
+  background:var(--blue);color:#fff;
+  font-size:12px;font-weight:700;font-family:var(--mono);
+  white-space:nowrap;text-decoration:none;
+  display:inline-flex;align-items:center;gap:4px;
+  border:none;
+}
+.btn-abrir:active{opacity:.85;}
+.card .top{display:flex;align-items:flex-start;gap:10px;}
+.card .icon-wrap{
+  width:42px;height:42px;border-radius:11px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+  background:var(--surface-2);
+}
+.card .info{flex:1;min-width:0;}
+.card .nome{font-size:16px;font-weight:700;letter-spacing:-.2px;line-height:1.2;}
+.card .sub{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:2px;letter-spacing:.3px;}
+.card .badges{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;}
+.badge{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;
+  padding:3px 8px;border-radius:6px;font-weight:700;
+}
+.badge.status-estavel{background:var(--green-soft);color:var(--green);border:1px solid #2a5038;}
+.badge.status-dev{background:var(--amber-soft);color:var(--amber);border:1px solid #4a3a10;}
+.badge.status-arquivado{background:#1e1e1e;color:var(--faint);border:1px solid var(--border);}
+.badge.secao{border:1px solid var(--border);background:var(--surface-2);}
+.badge.secao.pro{color:var(--pro);border-color:#2a3a6a;background:var(--blue-soft);}
+.badge.secao.pes{color:var(--pes);border-color:#2a4a35;background:var(--green-soft);}
+.badge.cat{color:var(--muted);border:1px solid var(--border);background:var(--surface-2);}
+
+.card .expand{display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px;}
+.card.open .expand{display:block;}
+.card .desc{font-size:14.5px;color:var(--muted);line-height:1.6;white-space:pre-wrap;}
+.card .notas{
+  margin-top:12px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:10px;padding:11px 13px;font-size:13.5px;color:var(--text);
+  line-height:1.6;white-space:pre-wrap;
+}
+.card .notas-lbl{font-family:var(--mono);font-size:9px;color:var(--faint);
+  text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px;}
+.card .arquivo{
+  margin-top:12px;display:flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:12px;color:var(--muted);
+}
+.card .arquivo span{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
+  padding:5px 10px;word-break:break-all;flex:1;
+}
+.card .row-btns{display:flex;gap:8px;margin-top:14px;}
+
+/* ── Buttons ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:13px 18px;border-radius:var(--r);font-weight:700;font-size:14px;
+  background:var(--surface-2);color:var(--text);border:1px solid var(--border);
+  transition:transform .08s;
+}
+.btn:active{transform:scale(.97);}
+.btn.blue{background:var(--blue);color:#fff;border-color:var(--blue);}
+.btn.ghost{background:transparent;}
+.btn.danger{background:var(--red-soft);color:var(--red);border-color:#4a2020;}
+.btn.full{width:100%;}
+.btn.sm{padding:9px 13px;font-size:12.5px;}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty .big{font-family:var(--serif);font-size:20px;color:var(--text);margin-bottom:8px;}
+.empty p{font-size:14px;line-height:1.6;margin-bottom:20px;}
+
+/* ── Estatísticas ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;}
+.stat-box .n{font-family:var(--serif);font-size:28px;font-weight:700;line-height:1;}
+.stat-box .n.blue{color:var(--blue);}
+.stat-box .n.green{color:var(--green);}
+.stat-box .n.amber{color:var(--amber);}
+.stat-box .k{font-family:var(--mono);font-size:9.5px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1px;margin-top:7px;}
+.sec-title{font-family:var(--mono);font-size:10px;color:var(--faint);
+  text-transform:uppercase;letter-spacing:1.5px;margin:22px 0 10px;}
+.stack{display:flex;flex-direction:column;gap:9px;}
+
+/* ── Sheet ── */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;
+  display:none;align-items:flex-end;justify-content:center;}
+.scrim.on{display:flex;}
+.sheet{
+  background:var(--surface);width:100%;max-width:680px;border-radius:22px 22px 0 0;
+  border-top:1px solid var(--border-hi);
+  padding:8px 18px calc(20px + env(safe-area-inset-bottom));
+  max-height:94vh;overflow-y:auto;animation:shup .2s ease;
+}
+@keyframes shup{from{transform:translateY(100%);}to{transform:none;}}
+.sheet .grab{width:38px;height:4px;background:var(--border-hi);border-radius:3px;margin:8px auto 16px;}
+.sheet h2{font-size:20px;font-weight:700;margin-bottom:18px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1.2px;margin-bottom:7px;}
+.field input,.field textarea,.field select{
+  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:11px;
+  padding:13px;color:var(--text);outline:none;transition:border .15s;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--blue);}
+.field textarea{resize:vertical;min-height:80px;line-height:1.5;}
+.field .hint{font-size:11.5px;color:var(--faint);margin-top:6px;line-height:1.4;}
+.seg{display:flex;gap:6px;}
+.seg button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);
+  background:var(--bg);color:var(--muted);font-size:13px;font-weight:700;}
+.seg button.on.pro{background:var(--blue-dim);color:var(--pro);border-color:var(--pro);}
+.seg button.on.pes{background:var(--green-soft);color:var(--pes);border-color:var(--pes);}
+.icon-picker{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.icon-opt{width:42px;height:42px;border-radius:10px;border:1px solid var(--border);
+  background:var(--bg);font-size:20px;display:flex;align-items:center;justify-content:center;}
+.icon-opt.on{border-color:var(--blue);background:var(--blue-dim);}
+.sheet-actions{display:flex;gap:10px;margin-top:10px;}
+.sheet-actions .btn{flex:1;}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(84px + env(safe-area-inset-bottom));
+  background:var(--text);color:var(--bg);font-size:13px;font-weight:700;
+  padding:10px 18px;border-radius:30px;z-index:60;opacity:0;pointer-events:none;
+  transition:opacity .18s,transform .18s;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">📁</div>
+  <h1>Ferramentas</h1>
+  <span class="count" id="hdr-count">0 arquivos</span>
+</header>
+
+<main>
+  <!-- LISTA -->
+  <section class="view active" id="v-lista">
+    <div class="toolbar">
+      <div class="search">
+        <span style="color:var(--faint);font-size:14px">⌕</span>
+        <input id="busca" placeholder="Buscar ferramenta…">
+      </div>
+      <button class="btn blue sm" onclick="abrirForm()">+ Novo</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div id="lista"></div>
+  </section>
+
+  <!-- BACKUP -->
+  <section class="view" id="v-backup">
+    <div class="stats-grid" id="stats"></div>
+    <div class="sec-title">Baixar este aplicativo</div>
+    <div class="stack">
+      <button class="btn blue full" onclick="baixarApp()">↓ Baixar catalogo.html</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--faint);margin-top:8px;line-height:1.5">
+      Salva o arquivo do aplicativo em si. Guarde no Drive para ter sempre a versão atual em qualquer aparelho.
+    </div>
+    <div class="sec-title">Salvar seus dados</div>
+    <div class="stack">
+      <button class="btn full" onclick="compartilhar()">↗ Enviar dados (Google Drive, etc.)</button>
+      <button class="btn full" onclick="baixar()">↓ Baixar dados .json</button>
+      <button class="btn full" onclick="copiar()">⧉ Copiar como texto</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--faint);margin-top:8px;line-height:1.5">
+      "Enviar" abre o menu de compartilhar do celular — escolha o Google Drive para guardar na nuvem.
+    </div>
+    <div class="sec-title">Restaurar</div>
+    <div class="field">
+      <textarea id="restore-txt" placeholder="Cole aqui o JSON do backup e toque em Restaurar…"></textarea>
+      <div class="hint">Substitui tudo que está aqui. Faça uma cópia antes.</div>
+    </div>
+    <button class="btn full" onclick="restaurar()">↺ Restaurar do texto colado</button>
+    <div class="sec-title">Zona de risco</div>
+    <button class="btn danger full" onclick="apagarTudo()">Apagar tudo</button>
+  </section>
+</main>
+
+<nav>
+  <button class="on" data-tab="lista" onclick="trocar('lista')">
+    <span class="ic">⊞</span>Ferramentas
+  </button>
+  <button data-tab="backup" onclick="trocar('backup')">
+    <span class="ic">⛁</span>Backup
+  </button>
+</nav>
+
+<!-- Sheet -->
+<div class="scrim" id="scrim" onclick="if(event.target===this)fecharSheet()">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const KEY="ferramentas_v1";
+const ICONES=["🛠","📊","📋","📝","💼","🗂","📁","⚙","🔧","📱","💡","🎯","📈","🧮","🔍","📌","🗒","💰","⚖","🌐"];
+const STATUS={estavel:"Estável",dev:"Em desenvolvimento",arquivado:"Arquivado"};
+let DB={versao:1,ferramentas:[]};
+let tabAtual="lista";
+let filtroSecao="todos";
+
+/* ── Persistência ── */
+function carregar(){
+  try{const r=localStorage.getItem(KEY);if(r)DB=JSON.parse(r);}catch(e){}
+  if(!DB.ferramentas)DB.ferramentas=[];
+}
+function salvar(){
+  try{localStorage.setItem(KEY,JSON.stringify(DB));}
+  catch(e){toast("Erro ao salvar");}
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function esc(s){return(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+/* ── Toast ── */
+let toastT;
+function toast(m){
+  const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2300);
+}
+
+/* ── Nav ── */
+function trocar(t){
+  tabAtual=t;
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("v-"+t).classList.add("active");
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
+  window.scrollTo(0,0);
+  if(t==="lista")renderLista();
+  if(t==="backup")renderBackup();
+}
+
+/* ── Chips de filtro ── */
+function renderChips(){
+  const cats=[...new Set(DB.ferramentas.map(f=>f.subcategoria).filter(Boolean))];
+  const chips=document.getElementById("chips");
+  chips.innerHTML=[
+    {id:"todos",label:"Todos"},
+    {id:"pro",label:"Profissional"},
+    {id:"pes",label:"Pessoal"},
+    ...cats.map(c=>({id:"cat:"+c,label:c}))
+  ].map(c=>`<button class="chip ${c.id==="pro"?"pro":c.id==="pes"?"pes":""} ${filtroSecao===c.id?"on":""}"
+    onclick="setFiltro('${esc(c.id)}')">${esc(c.label)}</button>`).join("");
+}
+function setFiltro(f){filtroSecao=f;renderChips();renderLista();}
+
+/* ── Lista ── */
+function filtrar(arr){
+  const q=(document.getElementById("busca").value||"").toLowerCase().trim();
+  if(filtroSecao==="pro")arr=arr.filter(f=>f.secao==="pro");
+  else if(filtroSecao==="pes")arr=arr.filter(f=>f.secao==="pes");
+  else if(filtroSecao.startsWith("cat:"))arr=arr.filter(f=>f.subcategoria===(filtroSecao.slice(4)));
+  if(q)arr=arr.filter(f=>((f.nome||"")+" "+(f.descricao||"")+" "+(f.subcategoria||"")+" "+(f.notas||"")+" "+(f.arquivo||"")).toLowerCase().includes(q));
+  return arr;
+}
+function renderLista(){
+  renderChips();
+  const arr=filtrar([...DB.ferramentas].sort((a,b)=>(a.nome||"").localeCompare(b.nome||"")));
+  const total=DB.ferramentas.length;
+  document.getElementById("hdr-count").textContent=total+" arquivo"+(total!==1?"s":"");
+  const cont=document.getElementById("lista");
+  if(DB.ferramentas.length===0){
+    cont.innerHTML=`<div class="empty">
+      <div class="big">Nenhuma ferramenta</div>
+      <p>Cadastre suas ferramentas HTML aqui.<br>Profissionais e pessoais separados, com notas e versão.</p>
+      <button class="btn blue" onclick="abrirForm()">+ Cadastrar primeira</button>
+    </div>`;return;
+  }
+  if(arr.length===0){
+    cont.innerHTML=`<div class="empty"><p>Nenhum resultado para este filtro.</p></div>`;return;
+  }
+  // agrupar por seção
+  const grupos={pro:arr.filter(f=>f.secao==="pro"),pes:arr.filter(f=>f.secao==="pes")};
+  let html="";
+  if(grupos.pro.length){
+    html+=`<div class="secao-label"><div class="dot pro"></div><span>Profissional</span><div class="line"></div></div>`;
+    html+=grupos.pro.map(f=>cardHTML(f)).join("");
+  }
+  if(grupos.pes.length){
+    html+=`<div class="secao-label"><div class="dot pes"></div><span>Pessoal</span><div class="line"></div></div>`;
+    html+=grupos.pes.map(f=>cardHTML(f)).join("");
+  }
+  cont.innerHTML=html;
+}
+function cardHTML(f){
+  const statusCls="status-"+(f.status||"estavel");
+  const statusLbl=STATUS[f.status||"estavel"];
+  const secaoLbl=f.secao==="pro"?"Profissional":"Pessoal";
+  const abrirBtn=f.url?`<a href="${esc(f.url)}" target="_blank" rel="noopener"
+    class="btn-abrir" onclick="event.stopPropagation()">Abrir ↗</a>`:"";
+  return `<div class="card" id="card-${f.id}" onclick="toggleCard('${f.id}')">
+    <div class="top">
+      <div class="icon-wrap">${esc(f.icone||"🛠")}</div>
+      <div class="info">
+        <div class="nome">${esc(f.nome)}</div>
+        <div class="sub">${f.versao?`v${esc(f.versao)}`:""} ${f.subcategoria?`· ${esc(f.subcategoria)}`:""}</div>
+        <div class="badges">
+          <span class="badge ${statusCls}">${statusLbl}</span>
+          <span class="badge secao ${f.secao}">${secaoLbl}</span>
+          ${f.subcategoria?`<span class="badge cat">${esc(f.subcategoria)}</span>`:""}
+        </div>
+      </div>
+      ${abrirBtn}
+    </div>
+    <div class="expand">
+      ${f.descricao?`<div class="desc">${esc(f.descricao)}</div>`:""}
+      ${f.notas?`<div class="notas"><div class="notas-lbl">Notas</div>${esc(f.notas)}</div>`:""}
+      ${f.arquivo?`<div class="arquivo">📄<span>${esc(f.arquivo)}</span></div>`:""}
+      ${f.url?`<div class="arquivo">🔗<span style="color:var(--blue)">${esc(f.url)}</span></div>`:""}
+      <div class="row-btns">
+        <button class="btn ghost sm" onclick="event.stopPropagation();abrirForm('${f.id}')">Editar</button>
+        <button class="btn danger sm" onclick="event.stopPropagation();apagarCard('${f.id}')">Apagar</button>
+      </div>
+    </div>
+  </div>`;
+}
+function toggleCard(id){
+  const el=document.getElementById("card-"+id);
+  if(el)el.classList.toggle("open");
+}
+function apagarCard(id){
+  if(!confirm("Apagar esta ferramenta do catálogo?"))return;
+  DB.ferramentas=DB.ferramentas.filter(f=>f.id!==id);
+  salvar();renderLista();toast("Removida do catálogo");
+}
+
+/* ── Form ── */
+let iconeSel="🛠";
+function abrirForm(id){
+  const f=id?DB.ferramentas.find(x=>x.id===id):null;
+  iconeSel=f?f.icone:"🛠";
+  const secao=f?f.secao:"pro";
+  const status=f?f.status:"estavel";
+  abrirSheet(`
+    <h2>${f?"Editar ferramenta":"Nova ferramenta"}</h2>
+    <div class="field"><label>Ícone</label>
+      <div class="icon-picker" id="icon-picker">
+        ${ICONES.map(i=>`<button class="icon-opt ${i===iconeSel?"on":""}" onclick="selIcone('${i}')" type="button">${i}</button>`).join("")}
+      </div>
+    </div>
+    <div class="field"><label>Nome</label>
+      <input id="f-nome" value="${f?esc(f.nome):""}" placeholder="ex.: Triagem MTR, IRON PLANNER…">
+    </div>
+    <div class="field"><label>Seção</label>
+      <div class="seg" id="seg-secao">
+        <button data-s="pro" class="${secao==="pro"?"on pro":""}" onclick="selSecao('pro')" type="button">💼 Profissional</button>
+        <button data-s="pes" class="${secao==="pes"?"on pes":""}" onclick="selSecao('pes')" type="button">🏠 Pessoal</button>
+      </div>
+    </div>
+    <div class="field"><label>Categoria</label>
+      <input id="f-sub" value="${f?esc(f.subcategoria||""):""}" placeholder="ex.: Telecom, Finanças, Saúde…">
+    </div>
+    <div class="field"><label>Versão</label>
+      <input id="f-ver" value="${f?esc(f.versao||""):""}" placeholder="ex.: 1.0, VRS12, v3.4">
+    </div>
+    <div class="field"><label>Status</label>
+      <select id="f-sta">
+        <option value="estavel" ${status==="estavel"?"selected":""}>Estável</option>
+        <option value="dev" ${status==="dev"?"selected":""}>Em desenvolvimento</option>
+        <option value="arquivado" ${status==="arquivado"?"selected":""}>Arquivado</option>
+      </select>
+    </div>
+    <div class="field"><label>Descrição</label>
+      <textarea id="f-desc" placeholder="O que esta ferramenta faz, quando usar…">${f?esc(f.descricao||""):""}</textarea>
+    </div>
+    <div class="field"><label>Nome do arquivo</label>
+      <input id="f-arq" value="${f?esc(f.arquivo||""):""}" placeholder="ex.: triagem_VRS12.html">
+      <div class="hint">Só pra referência — o app não abre o arquivo, você localiza pelo gerenciador.</div>
+    </div>
+    <div class="field"><label>URL (GitHub Pages)</label>
+      <input id="f-url" type="url" value="${f?esc(f.url||""):""}" placeholder="https://diegolilton.github.io/ferramentas/lexico.html">
+      <div class="hint">Quando preenchido, aparece o botão "Abrir ↗" no card.</div>
+    </div>
+    <div class="field"><label>Notas</label>
+      <textarea id="f-not" placeholder="Pendências, observações, próximos passos…">${f?esc(f.notas||""):""}</textarea>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn ghost" onclick="fecharSheet()" type="button">Cancelar</button>
+      <button class="btn blue" onclick="salvarForm('${id||""}')" type="button">Salvar</button>
+    </div>`);
+  setTimeout(()=>document.getElementById("f-nome").focus(),280);
+}
+function selIcone(i){
+  iconeSel=i;
+  document.querySelectorAll(".icon-opt").forEach(b=>b.classList.toggle("on",b.textContent===i));
+}
+function selSecao(s){
+  document.querySelectorAll("#seg-secao button").forEach(b=>{
+    b.className=b.dataset.s===s?"on "+s:"";
+  });
+}
+function salvarForm(id){
+  const nome=document.getElementById("f-nome").value.trim();
+  if(!nome){toast("Escreva o nome da ferramenta");return;}
+  const seg=document.querySelector("#seg-secao button.on");
+  const secao=seg?seg.dataset.s:"pro";
+  const obj={
+    nome,
+    secao,
+    icone:iconeSel,
+    subcategoria:document.getElementById("f-sub").value.trim(),
+    versao:document.getElementById("f-ver").value.trim(),
+    status:document.getElementById("f-sta").value,
+    descricao:document.getElementById("f-desc").value.trim(),
+    arquivo:document.getElementById("f-arq").value.trim(),
+    url:document.getElementById("f-url").value.trim(),
+    notas:document.getElementById("f-not").value.trim(),
+  };
+  if(id){Object.assign(DB.ferramentas.find(f=>f.id===id),obj);}
+  else{DB.ferramentas.push({id:uid(),criadoEm:Date.now(),...obj});}
+  salvar();fecharSheet();renderLista();
+  toast(id?"Atualizada":"Ferramenta cadastrada");
+}
+
+/* ── Sheet ── */
+function abrirSheet(html){
+  document.getElementById("sheet").innerHTML=`<div class="grab"></div>`+html;
+  document.getElementById("scrim").classList.add("on");
+}
+function fecharSheet(){document.getElementById("scrim").classList.remove("on");}
+
+/* ── Backup ── */
+function renderBackup(){
+  const total=DB.ferramentas.length;
+  const pro=DB.ferramentas.filter(f=>f.secao==="pro").length;
+  const pes=DB.ferramentas.filter(f=>f.secao==="pes").length;
+  const est=DB.ferramentas.filter(f=>(f.status||"estavel")==="estavel").length;
+  document.getElementById("stats").innerHTML=`
+    <div class="stat-box"><div class="n blue">${pro}</div><div class="k">Profissional</div></div>
+    <div class="stat-box"><div class="n green">${pes}</div><div class="k">Pessoal</div></div>
+    <div class="stat-box"><div class="n">${total}</div><div class="k">Total</div></div>
+    <div class="stat-box"><div class="n amber">${est}</div><div class="k">Estáveis</div></div>`;
+}
+function baixarApp(){
+  try{
+    const html=document.documentElement.outerHTML;
+    const blob=new Blob([html],{type:"text/html"});
+    const a=document.createElement("a");
+    const d=new Date();
+    a.href=URL.createObjectURL(blob);
+    a.download=`catalogo_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.html`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    toast("Arquivo do aplicativo baixado");
+  }catch(e){toast("Falha ao baixar — tente pelo menu do navegador");}
+}
+function json(){return JSON.stringify(DB,null,2);}
+function nomeArq(){
+  const d=new Date();
+  return `ferramentas_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.json`;
+}
+async function compartilhar(){
+  try{
+    const file=new File([json()],nomeArq(),{type:"application/json"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:"Backup Ferramentas"});return;
+    }
+  }catch(e){if(e&&e.name==="AbortError")return;}
+  baixar();
+}
+function baixar(){
+  try{
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([json()],{type:"application/json"}));
+    a.download=nomeArq();document.body.appendChild(a);a.click();document.body.removeChild(a);
+    toast("Arquivo gerado");
+  }catch(e){toast("Use 'Copiar' neste aparelho");}
+}
+function copiar(){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(json()).then(()=>toast("Copiado")).catch(()=>fallback());
+  }else fallback();
+}
+function fallback(){
+  const ta=document.createElement("textarea");ta.value=json();ta.style.cssText="position:fixed;opacity:0";
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");toast("Copiado");}catch(e){toast("Não foi possível copiar");}
+  document.body.removeChild(ta);
+}
+function restaurar(){
+  const txt=document.getElementById("restore-txt").value.trim();
+  if(!txt){toast("Cole o backup primeiro");return;}
+  let obj;try{obj=JSON.parse(txt);}catch(e){toast("Texto inválido");return;}
+  if(!Array.isArray(obj.ferramentas)){toast("Backup não reconhecido");return;}
+  if(!confirm("Substitui TUDO que está aqui. Continuar?"))return;
+  DB={versao:1,ferramentas:obj.ferramentas};
+  salvar();document.getElementById("restore-txt").value="";
+  renderBackup();toast("Restaurado");
+}
+function apagarTudo(){
+  if(!confirm("Apagar todo o catálogo?"))return;
+  if(!confirm("Tem certeza? Faça backup antes."))return;
+  DB={versao:1,ferramentas:[]};salvar();renderBackup();toast("Catálogo apagado");
+}
+
+/* ── Busca ── */
+document.getElementById("busca").addEventListener("input",renderLista);
+
+/* ── Init ── */
+carregar();renderLista();
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
