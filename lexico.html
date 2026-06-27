@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#16140f">
+<title>Léxico</title>
+<style>
+  :root{
+    --bg:#16140f;
+    --surface:#211e17;
+    --surface-2:#2a2619;
+    --border:#34301f;
+    --text:#ece6d6;
+    --muted:#a39b86;
+    --faint:#736c5c;
+    --gold:#d8a850;
+    --gold-soft:#3a3115;
+    --terra:#c4674e;
+    --terra-soft:#3a2018;
+    --green:#7fae6a;
+    --serif:Georgia,'Iowan Old Style','Palatino Linotype',Palatino,'Times New Roman',serif;
+    --sans:-apple-system,system-ui,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+    --mono:ui-monospace,'SF Mono',Menlo,Consolas,'Roboto Mono',monospace;
+    --r:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--sans);
+    font-size:16px;line-height:1.5;
+    padding-bottom:calc(72px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  input,textarea,select{font-family:inherit;font-size:16px;}
+  ::placeholder{color:var(--faint);}
+
+  /* ---- Header ---- */
+  header{
+    padding:22px 20px 14px;
+    border-bottom:1px solid var(--border);
+    display:flex;align-items:baseline;gap:12px;
+  }
+  header h1{
+    font-family:var(--serif);font-weight:600;font-size:24px;margin:0;
+    letter-spacing:.5px;
+  }
+  header .sub{font-family:var(--mono);font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:1.5px;}
+
+  main{padding:18px 16px 24px;max-width:680px;margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---- Bottom nav ---- */
+  nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:40;
+    background:rgba(22,20,15,.94);backdrop-filter:blur(10px);
+    border-top:1px solid var(--border);
+    display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  nav button{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:8px 2px;color:var(--faint);font-size:9.5px;font-weight:600;
+    letter-spacing:.3px;border-radius:10px;transition:color .15s;
+  }
+  nav button .ic{font-size:19px;line-height:1;}
+  nav button.on{color:var(--gold);}
+
+  /* ---- Buttons ---- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    padding:13px 18px;border-radius:var(--r);font-weight:600;font-size:15px;
+    background:var(--surface-2);color:var(--text);border:1px solid var(--border);
+    transition:transform .08s,background .15s;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn.gold{background:var(--gold);color:#1a1505;border-color:var(--gold);}
+  .btn.ghost{background:transparent;}
+  .btn.terra{background:var(--terra-soft);color:#e7a293;border-color:#5a3024;}
+  .btn.green{background:#26331c;color:#a7d18f;border-color:#3c5230;}
+  .btn.full{width:100%;}
+  .btn.sm{padding:9px 13px;font-size:13.5px;}
+
+  /* ---- Empty states ---- */
+  .empty{
+    text-align:center;padding:60px 24px;color:var(--muted);
+  }
+  .empty .big{font-family:var(--serif);font-size:21px;color:var(--text);margin-bottom:8px;}
+  .empty p{font-size:14px;margin:0 0 20px;line-height:1.6;}
+
+  /* ===== ESTUDAR ===== */
+  .study-meta{
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:var(--mono);font-size:11px;color:var(--faint);
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;
+  }
+  .bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:22px;}
+  .bar > i{display:block;height:100%;background:var(--gold);transition:width .3s;}
+
+  .modo-toggle{display:flex;gap:6px;margin-bottom:14px;}
+  .modo-toggle button{flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);
+    background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;font-family:var(--mono);letter-spacing:.2px;}
+  .modo-toggle button.on{background:var(--gold-soft);color:var(--gold);border-color:var(--gold);}
+  .recall-hint{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:1.5px;text-transform:uppercase;}
+  .cloze-cue{font-family:var(--serif);font-size:clamp(21px,5.4vw,27px);line-height:1.55;font-style:italic;margin:18px 0;}
+  .cloze-cue .gap{font-style:normal;color:var(--gold);letter-spacing:2px;border-bottom:2px solid var(--gold);padding:0 6px;}
+  .card .actions.tri .btn{flex:1;font-size:12.5px;padding:13px 6px;}
+  .motivacao-card{
+    margin:14px auto 0;max-width:420px;background:#2e2810;border:1px solid #4f4220;border-radius:14px;
+    padding:18px 20px;font-family:var(--serif);font-size:17px;font-style:italic;color:#ecd9a3;line-height:1.55;
+  }
+  .motivacao-card .mc-src{font-family:var(--mono);font-size:11px;font-style:normal;color:#a8975f;margin-top:10px;}
+  .card{
+    background:var(--surface);border:1px solid var(--border);border-radius:20px;
+    padding:38px 26px 30px;min-height:62vh;display:flex;flex-direction:column;
+    position:relative;overflow:hidden;
+  }
+  .card .corner{
+    position:absolute;top:16px;right:18px;font-family:var(--mono);
+    font-size:10px;color:var(--faint);letter-spacing:1px;
+  }
+  .headword{
+    font-family:var(--serif);font-size:clamp(34px,9vw,46px);font-weight:600;
+    line-height:1.1;margin:24px 0 6px;letter-spacing:.5px;
+  }
+  .prompt{color:var(--muted);font-size:14px;font-style:italic;font-family:var(--serif);}
+  .reveal{margin-top:26px;border-top:1px solid var(--border);padding-top:22px;animation:up .25s ease;}
+  @keyframes up{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+  .reveal .lbl{font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+  .reveal .def{font-size:18px;line-height:1.55;font-family:var(--serif);margin-bottom:20px;}
+  .reveal .frase{
+    background:var(--gold-soft);border-left:3px solid var(--gold);
+    padding:12px 14px;border-radius:0 10px 10px 0;font-family:var(--serif);
+    font-size:15.5px;font-style:italic;color:#e9dcc0;line-height:1.55;
+  }
+  .reveal .frase b{font-style:normal;color:var(--gold);}
+  .reveal .tags{margin-top:16px;display:flex;flex-wrap:wrap;gap:6px;}
+
+  .card .actions{margin-top:auto;padding-top:26px;display:flex;gap:10px;}
+  .card .actions .btn{flex:1;}
+
+  /* ===== LISTAS ===== */
+  .toolbar{display:flex;gap:8px;margin-bottom:14px;}
+  .search{
+    flex:1;display:flex;align-items:center;gap:8px;
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0 12px;
+  }
+  .search input{flex:1;background:none;border:none;color:var(--text);padding:12px 0;outline:none;}
+  .search .ic{color:var(--faint);font-size:15px;}
+
+  .item{
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:15px 16px;margin-bottom:10px;
+  }
+  .item .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .item .word{font-family:var(--serif);font-size:19px;font-weight:600;}
+  .item .prev{color:var(--muted);font-size:14px;margin-top:3px;line-height:1.5;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .item.open .prev{-webkit-line-clamp:unset;}
+  .item .expand{margin-top:12px;display:none;}
+  .item.open .expand{display:block;}
+  .item .expand .frase{
+    background:var(--gold-soft);border-left:3px solid var(--gold);padding:10px 12px;
+    border-radius:0 8px 8px 0;font-family:var(--serif);font-style:italic;font-size:14.5px;
+    color:#e9dcc0;margin:10px 0;line-height:1.5;
+  }
+  .item .row-btns{display:flex;gap:8px;margin-top:12px;}
+  .stat-pill{
+    font-family:var(--mono);font-size:10px;color:var(--faint);
+    border:1px solid var(--border);border-radius:20px;padding:3px 8px;white-space:nowrap;
+  }
+  .badge{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;
+    padding:3px 8px;border-radius:6px;background:var(--surface-2);color:var(--muted);
+    border:1px solid var(--border);white-space:nowrap;
+  }
+  .badge.trecho{color:#9db8d6;border-color:#2e3d4f;background:#1b2530;}
+  .badge.escrita{color:#d6b89d;border-color:#4f3d2e;background:#302619;}
+  .badge.anotacao{color:#b8d69d;border-color:#3d4f2e;background:#253019;}
+  .badge.outro{color:var(--muted);}
+  .badge.motivacao{color:#e8c468;border-color:#4f4220;background:#2e2810;}
+  .tag{font-family:var(--mono);font-size:10px;color:var(--gold);background:var(--gold-soft);
+    border-radius:6px;padding:3px 7px;}
+  .toggle-visto{
+    flex-shrink:0;padding:7px 11px;border-radius:20px;
+    border:1px solid var(--border);background:var(--surface-2);
+    font-size:11.5px;font-weight:600;font-family:var(--mono);color:var(--faint);white-space:nowrap;
+    transition:background .15s,color .15s,border-color .15s;
+  }
+  .toggle-visto.on{background:#1a3025;color:#5db87a;border-color:#2d5e3a;}
+  .link-url{
+    display:block;font-family:var(--mono);font-size:11px;color:var(--gold);
+    word-break:break-all;margin-top:8px;line-height:1.55;
+  }
+  .lnk-chips{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;}
+  .lnk-chips::-webkit-scrollbar{display:none;}
+  .lnk-chip{
+    flex-shrink:0;padding:7px 13px;border-radius:20px;
+    border:1px solid var(--border);background:var(--surface);
+    font-size:11.5px;font-weight:600;font-family:var(--mono);color:var(--muted);white-space:nowrap;
+  }
+  .lnk-chip.on{background:var(--gold-soft);color:var(--gold);border-color:var(--gold);}
+
+  .note-text{font-family:var(--serif);font-size:15.5px;line-height:1.6;white-space:pre-wrap;color:var(--text);}
+  .note-src{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:10px;}
+
+  /* ===== SHEET (formulários) ===== */
+  .scrim{
+    position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;
+    display:none;align-items:flex-end;justify-content:center;
+  }
+  .scrim.on{display:flex;}
+  .sheet{
+    background:var(--surface);width:100%;max-width:680px;border-radius:22px 22px 0 0;
+    border-top:1px solid var(--border);padding:8px 18px calc(20px + env(safe-area-inset-bottom));
+    max-height:92vh;overflow-y:auto;animation:sheetup .22s ease;
+  }
+  @keyframes sheetup{from{transform:translateY(100%);}to{transform:none;}}
+  .sheet .grab{width:38px;height:4px;background:var(--border);border-radius:3px;margin:8px auto 14px;}
+  .sheet h2{font-family:var(--serif);font-size:21px;margin:0 0 18px;font-weight:600;}
+  .field{margin-bottom:15px;}
+  .field label{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
+  .field input,.field textarea,.field select{
+    width:100%;background:var(--bg);border:1px solid var(--border);border-radius:11px;
+    padding:13px 13px;color:var(--text);outline:none;transition:border .15s;
+  }
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold);}
+  .field textarea{resize:vertical;min-height:90px;line-height:1.55;}
+  .field .hint{font-size:11.5px;color:var(--faint);margin-top:6px;line-height:1.4;}
+  .seg{display:flex;gap:6px;flex-wrap:wrap;}
+  .seg button{flex:1;min-width:72px;padding:10px;border-radius:10px;border:1px solid var(--border);
+    background:var(--bg);color:var(--muted);font-size:13px;font-weight:600;}
+  .seg button.on{background:var(--gold-soft);color:var(--gold);border-color:var(--gold);}
+  .sheet-actions{display:flex;gap:10px;margin-top:8px;}
+  .sheet-actions .btn{flex:1;}
+
+  /* ===== BACKUP ===== */
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
+  .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;}
+  .stat-box .n{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1;}
+  .stat-box .n.gold{color:var(--gold);}
+  .stat-box .n.green{color:var(--green);}
+  .stat-box .k{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;
+    letter-spacing:1px;margin-top:8px;}
+  .section-title{font-family:var(--mono);font-size:11px;color:var(--faint);text-transform:uppercase;
+    letter-spacing:1.5px;margin:24px 0 12px;}
+  .stack{display:flex;flex-direction:column;gap:10px;}
+
+  .toast{
+    position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom));
+    background:var(--text);color:var(--bg);font-size:13.5px;font-weight:600;
+    padding:11px 18px;border-radius:30px;z-index:60;opacity:0;pointer-events:none;
+    transition:opacity .2s,transform .2s;white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Léxico</h1>
+  <span class="sub">caderno de palavras</span>
+</header>
+
+<main>
+  <!-- ESTUDAR -->
+  <section class="view active" id="v-estudar"></section>
+
+  <!-- PALAVRAS -->
+  <section class="view" id="v-palavras">
+    <div class="toolbar">
+      <div class="search"><span class="ic">⌕</span><input id="busca-pal" placeholder="Buscar palavra…"></div>
+      <button class="btn gold sm" onclick="abrirFormPalavra()">+ Nova</button>
+    </div>
+    <button class="btn ghost sm full" style="margin-bottom:14px" onclick="abrirImport()">↧ Importar em massa</button>
+    <div id="lista-pal"></div>
+  </section>
+
+  <!-- ANOTAÇÕES -->
+  <section class="view" id="v-anotacoes">
+    <div class="toolbar">
+      <div class="search"><span class="ic">⌕</span><input id="busca-not" placeholder="Buscar anotação…"></div>
+      <button class="btn gold sm" onclick="abrirFormNota()">+ Nova</button>
+    </div>
+    <div id="lista-not"></div>
+  </section>
+
+  <!-- LINKS -->
+  <section class="view" id="v-links" data-filtro="todos">
+    <div class="toolbar">
+      <div class="search"><span class="ic">⌕</span><input id="busca-lnk" placeholder="Buscar link…"></div>
+      <button class="btn gold sm" onclick="abrirFormLink()">+ Novo</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="lnk-chips">
+        <button class="lnk-chip on" data-f="todos" onclick="setFiltroLink('todos')">Todos</button>
+        <button class="lnk-chip" data-f="nao" onclick="setFiltroLink('nao')">Não vistos</button>
+        <button class="lnk-chip" data-f="visto" onclick="setFiltroLink('visto')">Vistos</button>
+      </div>
+      <span class="stat-pill" id="lnk-contador" style="flex-shrink:0;margin-left:8px">0/0</span>
+    </div>
+    <button class="btn ghost sm full" style="margin-bottom:14px" onclick="abrirImportLinks()">↧ Importar lista de URLs</button>
+    <div id="lista-lnk"></div>
+  </section>
+
+  <!-- BACKUP -->
+  <section class="view" id="v-backup">
+    <div class="stats-grid" id="stats"></div>
+
+    <div class="section-title">Baixar este aplicativo</div>
+    <div class="stack">
+      <button class="btn gold full" onclick="baixarAppLexico()">↓ Baixar lexico.html</button>
+    </div>
+    <div class="hint" style="margin-top:8px;color:var(--faint);font-size:11.5px">Salva o arquivo do aplicativo em si. Guarde no Drive para ter sempre a versão atual em qualquer aparelho.</div>
+
+    <div class="section-title">Salvar seus dados</div>
+    <div class="stack">
+      <button class="btn full" onclick="compartilharBackup()">↗ Enviar dados (Google Drive, etc.)</button>
+      <button class="btn full" onclick="baixarBackup()">↓ Baixar dados .json</button>
+      <button class="btn full" onclick="copiarBackup()">⧉ Copiar dados como texto</button>
+    </div>
+    <div class="hint" style="margin-top:8px;color:var(--faint);font-size:11.5px">"Enviar" abre o menu de compartilhar do celular — escolha o Google Drive para guardar na nuvem.</div>
+
+    <div class="section-title">Restaurar de uma cópia</div>
+    <div class="field" style="margin-bottom:10px">
+      <textarea id="restore-area" placeholder="Cole aqui o texto do backup e toque em Restaurar…"></textarea>
+      <div class="hint">Substitui tudo o que está aqui hoje pelo conteúdo colado. Faça uma cópia antes, por garantia.</div>
+    </div>
+    <button class="btn full" onclick="restaurarBackup()">↺ Restaurar do texto colado</button>
+
+    <div class="section-title">Zona de risco</div>
+    <button class="btn terra full" onclick="apagarTudo()">Apagar tudo</button>
+  </section>
+</main>
+
+<nav>
+  <button class="on" data-tab="estudar" onclick="trocar('estudar')"><span class="ic">◎</span>Estudar</button>
+  <button data-tab="palavras" onclick="trocar('palavras')"><span class="ic">≡</span>Palavras</button>
+  <button data-tab="anotacoes" onclick="trocar('anotacoes')"><span class="ic">✎</span>Notas</button>
+  <button data-tab="links" onclick="trocar('links')"><span class="ic">🔗</span>Links</button>
+  <button data-tab="backup" onclick="trocar('backup')"><span class="ic">⛁</span>Backup</button>
+</nav>
+
+<!-- SHEET genérica -->
+<div class="scrim" id="scrim" onclick="if(event.target===this)fecharSheet()">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const KEY="lexico_v1";
+let DB={versao:1,palavras:[],anotacoes:[]};
+let tab="estudar";
+let fila=[], filaIdx=0, revelado=false, modo="sentido";
+
+/* ---------- Persistência ---------- */
+function carregar(){
+  try{const r=localStorage.getItem(KEY);if(r)DB=JSON.parse(r);}catch(e){}
+  if(!DB.palavras)DB.palavras=[];
+  if(!DB.anotacoes)DB.anotacoes=[];
+  if(!DB.links)DB.links=[];
+  DB.palavras.forEach(p=>{
+    if(p.nivel===undefined)p.nivel=0;
+    if(p.proximaRevisao===undefined)p.proximaRevisao=0; // 0 = vence agora
+  });
+}
+function salvar(){
+  try{localStorage.setItem(KEY,JSON.stringify(DB));}
+  catch(e){toast("Erro ao salvar no aparelho");}
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+/* ---------- Toast ---------- */
+let toastT;
+function toast(m){
+  const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+/* ---------- Navegação ---------- */
+function trocar(t){
+  tab=t;
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("v-"+t).classList.add("active");
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
+  window.scrollTo(0,0);
+  if(t==="estudar")iniciarEstudo();
+  if(t==="palavras")renderPalavras();
+  if(t==="anotacoes")renderNotas();
+  if(t==="links")renderLinks();
+  if(t==="backup")renderBackup();
+}
+
+/* ---------- ESTUDAR (repetição espaçada) ---------- */
+const INTERVALOS=[1,3,7,16,35,75,150]; // dias da escada
+const DIA=86400000;
+function venceHoje(p){return (p.proximaRevisao||0)<=Date.now();}
+function dominada(p){return (p.nivel||0)>=4;}            // intervalo de 35+ dias
+function emEstudo(p){return (p.revisoes||0)>0 && !dominada(p);}
+function nova(p){return (p.revisoes||0)===0;}
+function montarFila(){
+  return DB.palavras.filter(venceHoje).sort((a,b)=>(a.proximaRevisao||0)-(b.proximaRevisao||0));
+}
+function proximoVencimento(){
+  const f=DB.palavras.filter(p=>!venceHoje(p)).map(p=>p.proximaRevisao);
+  return f.length?Math.min.apply(null,f):0;
+}
+function escRe(s){return (s||"").replace(/[.*+?^${}()|[\]\\]/g,"\\$&");}
+function contemPalavra(frase,pal){try{return new RegExp(escRe(pal),"i").test(frase);}catch(e){return false;}}
+function clozar(frase,pal){
+  const ef=esc(frase), ep=esc(pal);
+  try{return ef.replace(new RegExp(escRe(ep),"ig"),'<span class="gap">_____</span>');}
+  catch(e){return ef;}
+}
+function formatarQuando(ts){
+  const d=Math.ceil((ts-Date.now())/DIA);
+  if(d<=0)return "hoje";
+  if(d===1)return "amanhã";
+  if(d<7)return "em "+d+" dias";
+  return "em "+new Date(ts).toLocaleDateString("pt-BR");
+}
+function motivacaoAleatoria(){
+  const m=DB.anotacoes.filter(n=>n.tipo==="motivacao");
+  return m.length?m[Math.floor(Math.random()*m.length)]:null;
+}
+
+function iniciarEstudo(){fila=montarFila();filaIdx=0;revelado=false;renderEstudo();}
+function estudarAdiantado(){
+  fila=[...DB.palavras].sort((a,b)=>(a.proximaRevisao||0)-(b.proximaRevisao||0));
+  filaIdx=0;revelado=false;renderEstudo();
+}
+function setModo(m){modo=m;revelado=false;renderEstudo();}
+
+function renderEstudo(){
+  const v=document.getElementById("v-estudar");
+  if(DB.palavras.length===0){
+    v.innerHTML=`<div class="empty">
+      <div class="big">Nenhuma palavra ainda</div>
+      <p>Adicione palavras com significado e uma frase de exemplo.<br>Depois, é só estudar.</p>
+      <button class="btn gold" onclick="trocar('palavras');setTimeout(abrirFormPalavra,250)">+ Adicionar primeira palavra</button>
+    </div>`;return;
+  }
+  if(filaIdx>=fila.length){
+    const prox=proximoVencimento();
+    const mot=motivacaoAleatoria();
+    v.innerHTML=`<div class="empty">
+      <div class="big">Tudo em dia ✓</div>
+      <p>${fila.length>0?"Você revisou tudo que vencia hoje.":"Nada vence hoje."}${prox?`<br>Próxima revisão ${formatarQuando(prox)}.`:""}</p>
+      ${mot?`<div class="motivacao-card">${esc(mot.texto)}${mot.fonte?`<div class="mc-src">— ${esc(mot.fonte)}</div>`:""}</div>`:""}
+      <button class="btn ghost" style="margin-top:18px" onclick="estudarAdiantado()">Revisar adiantado mesmo assim</button>
+    </div>`;return;
+  }
+  const p=fila[filaIdx];
+  const prog=Math.round((filaIdx/fila.length)*100);
+  const usaCloze = modo==="cloze" && p.frase && contemPalavra(p.frase,p.palavra);
+  const cue = usaCloze
+    ? `<div class="recall-hint">complete a frase</div><div class="cloze-cue">${clozar(p.frase,p.palavra)}</div>`
+    : `<div class="prompt">tente lembrar o significado…</div><div class="headword">${esc(p.palavra)}</div>`;
+  v.innerHTML=`
+    <div class="study-meta">
+      <span>${filaIdx+1} de ${fila.length} para hoje</span>
+      <span>acertos ${p.acertos||0} · erros ${p.erros||0}</span>
+    </div>
+    <div class="bar"><i style="width:${prog}%"></i></div>
+    <div class="modo-toggle">
+      <button class="${modo==='sentido'?'on':''}" onclick="setModo('sentido')">Palavra → sentido</button>
+      <button class="${modo==='cloze'?'on':''}" onclick="setModo('cloze')">Frase → palavra</button>
+    </div>
+    <div class="card" onclick="revelar()">
+      ${cue}
+      <div id="rev"></div>
+      <div class="actions" id="acts">
+        <button class="btn gold full" onclick="revelar()">Mostrar resposta</button>
+      </div>
+    </div>`;
+}
+function revelar(){
+  if(revelado)return;
+  revelado=true;
+  const p=fila[filaIdx];
+  const usaCloze = modo==="cloze" && p.frase && contemPalavra(p.frase,p.palavra);
+  let frase=esc(p.frase||"");
+  if(p.frase && p.palavra){
+    try{frase=esc(p.frase).replace(new RegExp("("+escRe(p.palavra)+")","ig"),"<b>$1</b>");}
+    catch(e){frase=esc(p.frase);}
+  }
+  const tags=(p.tags&&p.tags.length)?`<div class="tags">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:"";
+  const est=nova(p)?"nova":(dominada(p)?"dominada":"em estudo");
+  document.getElementById("rev").innerHTML=`
+    <div class="reveal">
+      ${usaCloze?`<div class="lbl">palavra</div><div class="def" style="font-size:24px"><b style="color:var(--gold)">${esc(p.palavra)}</b></div>`:""}
+      <div class="lbl">significado</div>
+      <div class="def">${esc(p.significado)||'<span style="color:var(--faint)">— sem significado anotado —</span>'}</div>
+      ${p.frase?`<div class="lbl">frase de colocação</div><div class="frase">${frase}</div>`:""}
+      ${tags}
+      <div class="recall-hint" style="margin-top:14px">situação: ${est}</div>
+    </div>`;
+  const acts=document.getElementById("acts");
+  acts.className="actions tri";
+  acts.innerHTML=`
+    <button class="btn terra" onclick="event.stopPropagation();avaliar('errou')">✗ Não lembrei</button>
+    <button class="btn" onclick="event.stopPropagation();avaliar('quase')">~ Quase</button>
+    <button class="btn green" onclick="event.stopPropagation();avaliar('facil')">✓ Fácil</button>`;
+}
+function avaliar(nota){
+  const p=fila[filaIdx];
+  p.revisoes=(p.revisoes||0)+1;
+  let nv=p.nivel||0;
+  if(nota==="errou"){nv=0;p.erros=(p.erros||0)+1;}
+  else if(nota==="quase"){nv=Math.min(nv+1,INTERVALOS.length-1);p.acertos=(p.acertos||0)+1;}
+  else {nv=Math.min(nv+2,INTERVALOS.length-1);p.acertos=(p.acertos||0)+1;}
+  p.nivel=nv;
+  p.ultimaRevisao=Date.now();
+  p.proximaRevisao=Date.now()+INTERVALOS[nv]*DIA;
+  salvar();
+  filaIdx++;revelado=false;renderEstudo();
+}
+
+/* ---------- PALAVRAS ---------- */
+function renderPalavras(){
+  const q=(document.getElementById("busca-pal").value||"").toLowerCase().trim();
+  const cont=document.getElementById("lista-pal");
+  let arr=[...DB.palavras].sort((a,b)=>(b.criadoEm||0)-(a.criadoEm||0));
+  if(q)arr=arr.filter(p=>(p.palavra+" "+p.significado+" "+(p.frase||"")+" "+(p.tags||[]).join(" ")).toLowerCase().includes(q));
+  if(DB.palavras.length===0){
+    cont.innerHTML=`<div class="empty"><div class="big">Sua lista está vazia</div>
+      <p>Toque em <b>+ Nova</b> para adicionar uma palavra, ou use <b>Importar em massa</b> se já tem uma lista pronta.</p></div>`;return;
+  }
+  if(arr.length===0){cont.innerHTML=`<div class="empty"><p>Nada encontrado para "${esc(q)}".</p></div>`;return;}
+  cont.innerHTML=arr.map(p=>{
+    const est=(p.revisoes||0)===0?"nova":(dominada(p)?"dominada":"em estudo");
+    let frase=esc(p.frase||"");
+    return `<div class="item" onclick="this.classList.toggle('open')">
+      <div class="top">
+        <div style="min-width:0">
+          <div class="word">${esc(p.palavra)}</div>
+          <div class="prev">${esc(p.significado)}</div>
+        </div>
+        <span class="stat-pill">${est}</span>
+      </div>
+      <div class="expand">
+        ${p.frase?`<div class="frase">${frase}</div>`:""}
+        ${(p.tags&&p.tags.length)?`<div class="tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}
+        <div class="row-btns">
+          <button class="btn ghost sm" onclick="event.stopPropagation();abrirFormPalavra('${p.id}')">Editar</button>
+          <button class="btn terra sm" onclick="event.stopPropagation();apagarPalavra('${p.id}')">Apagar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+function apagarPalavra(id){
+  if(!confirm("Apagar esta palavra?"))return;
+  DB.palavras=DB.palavras.filter(p=>p.id!==id);salvar();renderPalavras();toast("Palavra apagada");
+}
+
+/* ---------- ANOTAÇÕES ---------- */
+const TIPOS={trecho:"Trecho",escrita:"Escrita própria",anotacao:"Anotação",motivacao:"Motivação",outro:"Outro"};
+function renderNotas(){
+  const q=(document.getElementById("busca-not").value||"").toLowerCase().trim();
+  const cont=document.getElementById("lista-not");
+  let arr=[...DB.anotacoes].sort((a,b)=>(b.criadoEm||0)-(a.criadoEm||0));
+  if(q)arr=arr.filter(n=>((n.titulo||"")+" "+n.texto+" "+(n.fonte||"")).toLowerCase().includes(q));
+  if(DB.anotacoes.length===0){
+    cont.innerHTML=`<div class="empty"><div class="big">Nenhuma anotação</div>
+      <p>Guarde aqui trechos de livros, suas próprias escritas e ideias soltas.</p></div>`;return;
+  }
+  if(arr.length===0){cont.innerHTML=`<div class="empty"><p>Nada encontrado para "${esc(q)}".</p></div>`;return;}
+  cont.innerHTML=arr.map(n=>{
+    const titulo=n.titulo?esc(n.titulo):esc(n.texto).slice(0,60)+(n.texto.length>60?"…":"");
+    return `<div class="item" onclick="this.classList.toggle('open')">
+      <div class="top">
+        <div style="min-width:0">
+          <div class="word" style="font-size:16px">${titulo}</div>
+          <div class="prev">${esc(n.texto)}</div>
+        </div>
+        <span class="badge ${n.tipo}">${TIPOS[n.tipo]||"Nota"}</span>
+      </div>
+      <div class="expand">
+        <div class="note-text">${esc(n.texto)}</div>
+        ${n.fonte?`<div class="note-src">— ${esc(n.fonte)}</div>`:""}
+        <div class="row-btns">
+          <button class="btn ghost sm" onclick="event.stopPropagation();abrirFormNota('${n.id}')">Editar</button>
+          <button class="btn terra sm" onclick="event.stopPropagation();apagarNota('${n.id}')">Apagar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+function apagarNota(id){
+  if(!confirm("Apagar esta anotação?"))return;
+  DB.anotacoes=DB.anotacoes.filter(n=>n.id!==id);salvar();renderNotas();toast("Anotação apagada");
+}
+
+/* ---------- SHEET ---------- */
+function abrirSheet(html){
+  document.getElementById("sheet").innerHTML=`<div class="grab"></div>`+html;
+  document.getElementById("scrim").classList.add("on");
+}
+function fecharSheet(){document.getElementById("scrim").classList.remove("on");}
+
+function abrirFormPalavra(id){
+  const p=id?DB.palavras.find(x=>x.id===id):null;
+  abrirSheet(`
+    <h2>${p?"Editar palavra":"Nova palavra"}</h2>
+    <div class="field"><label>Palavra</label><input id="f-pal" value="${p?esc(p.palavra):""}" placeholder="ex.: efêmero"></div>
+    <div class="field"><label>Significado</label><textarea id="f-sig" placeholder="o que ela quer dizer, com suas palavras">${p?esc(p.significado):""}</textarea></div>
+    <div class="field"><label>Frase de colocação</label><textarea id="f-fra" placeholder="a palavra usada numa frase real">${p?esc(p.frase||""):""}</textarea>
+      <div class="hint">Onde a palavra aparece, ela fica destacada no estudo.</div></div>
+    <div class="field"><label>Tags (opcional)</label><input id="f-tag" value="${p?esc((p.tags||[]).join(", ")):""}" placeholder="separadas por vírgula">
+      <div class="hint">ex.: literatura, formal, inglês</div></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" onclick="fecharSheet()">Cancelar</button>
+      <button class="btn gold" onclick="salvarPalavra('${id||""}')">Salvar</button>
+    </div>`);
+  setTimeout(()=>document.getElementById("f-pal").focus(),250);
+}
+function salvarPalavra(id){
+  const pal=document.getElementById("f-pal").value.trim();
+  if(!pal){toast("Escreva ao menos a palavra");return;}
+  const sig=document.getElementById("f-sig").value.trim();
+  const fra=document.getElementById("f-fra").value.trim();
+  const tags=document.getElementById("f-tag").value.split(",").map(s=>s.trim()).filter(Boolean);
+  if(id){
+    const p=DB.palavras.find(x=>x.id===id);
+    Object.assign(p,{palavra:pal,significado:sig,frase:fra,tags});
+  }else{
+    DB.palavras.push({id:uid(),palavra:pal,significado:sig,frase:fra,tags,
+      criadoEm:Date.now(),revisoes:0,acertos:0,erros:0,ultimaRevisao:0});
+  }
+  salvar();fecharSheet();
+  if(tab==="palavras")renderPalavras();
+  toast(id?"Palavra atualizada":"Palavra adicionada");
+}
+
+function abrirFormNota(id){
+  const n=id?DB.anotacoes.find(x=>x.id===id):null;
+  const tipo=n?n.tipo:"trecho";
+  abrirSheet(`
+    <h2>${n?"Editar anotação":"Nova anotação"}</h2>
+    <div class="field"><label>Tipo</label>
+      <div class="seg" id="seg-tipo">
+        ${Object.entries(TIPOS).map(([k,v])=>`<button data-t="${k}" class="${k===tipo?"on":""}" onclick="selTipo('${k}')">${v}</button>`).join("")}
+      </div>
+    </div>
+    <div class="field"><label>Título (opcional)</label><input id="f-tit" value="${n?esc(n.titulo||""):""}" placeholder="um nome curto pra reencontrar"></div>
+    <div class="field"><label>Texto</label><textarea id="f-txt" style="min-height:140px" placeholder="o trecho, a ideia, a escrita…">${n?esc(n.texto):""}</textarea></div>
+    <div class="field"><label>Fonte (opcional)</label><input id="f-fon" value="${n?esc(n.fonte||""):""}" placeholder="livro, autor, contexto"></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" onclick="fecharSheet()">Cancelar</button>
+      <button class="btn gold" onclick="salvarNota('${id||""}')">Salvar</button>
+    </div>`);
+  document.getElementById("seg-tipo").dataset.sel=tipo;
+}
+function selTipo(t){
+  const seg=document.getElementById("seg-tipo");seg.dataset.sel=t;
+  seg.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+}
+function salvarNota(id){
+  const txt=document.getElementById("f-txt").value.trim();
+  if(!txt){toast("Escreva o texto da anotação");return;}
+  const tipo=document.getElementById("seg-tipo").dataset.sel||"trecho";
+  const tit=document.getElementById("f-tit").value.trim();
+  const fon=document.getElementById("f-fon").value.trim();
+  if(id){
+    const n=DB.anotacoes.find(x=>x.id===id);
+    Object.assign(n,{tipo,titulo:tit,texto:txt,fonte:fon});
+  }else{
+    DB.anotacoes.push({id:uid(),tipo,titulo:tit,texto:txt,fonte:fon,criadoEm:Date.now()});
+  }
+  salvar();fecharSheet();
+  if(tab==="anotacoes")renderNotas();
+  toast(id?"Anotação atualizada":"Anotação salva");
+}
+
+/* ---------- IMPORTAR EM MASSA ---------- */
+function abrirImport(){
+  abrirSheet(`
+    <h2>Importar palavras</h2>
+    <div class="field"><label>Cole sua lista (uma por linha)</label>
+      <textarea id="imp" style="min-height:160px" placeholder="efêmero | que dura pouco | uma alegria efêmera
+resiliência | capacidade de se recuperar | a resiliência do time impressionou"></textarea>
+      <div class="hint">Formato: <b>palavra | significado | frase</b><br>
+      O significado e a frase são opcionais — pode colar só as palavras, uma por linha, e preencher depois.</div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn ghost" onclick="fecharSheet()">Cancelar</button>
+      <button class="btn gold" onclick="processarImport()">Importar</button>
+    </div>`);
+}
+function processarImport(){
+  const raw=document.getElementById("imp").value;
+  const linhas=raw.split("\n").map(l=>l.trim()).filter(Boolean);
+  let n=0;
+  linhas.forEach(l=>{
+    const partes=l.split("|").map(s=>s.trim());
+    const pal=partes[0];if(!pal)return;
+    DB.palavras.push({id:uid(),palavra:pal,significado:partes[1]||"",frase:partes[2]||"",
+      tags:[],criadoEm:Date.now(),revisoes:0,acertos:0,erros:0,ultimaRevisao:0});
+    n++;
+  });
+  if(n===0){toast("Nenhuma linha válida");return;}
+  salvar();fecharSheet();renderPalavras();toast(n+" palavra(s) importada(s)");
+}
+
+/* ---------- LINKS ---------- */
+function slugToTitulo(url){
+  try{
+    const tedM=url.match(/ted\.com\/talks\/([^?#/]+)/);
+    if(tedM)return tedM[1].replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+    const ytM=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^?&]+)/);
+    if(ytM)return 'YouTube · '+ytM[1];
+    const u=new URL(url);
+    return u.hostname.replace(/^www\./,'');
+  }catch(e){return url.slice(0,60);}
+}
+function atualizarContadorLinks(){
+  const total=DB.links.length;
+  const vistos=DB.links.filter(l=>l.visto).length;
+  const el=document.getElementById("lnk-contador");
+  if(el)el.textContent=vistos+"/"+total+" vistos";
+}
+function renderLinks(){
+  const q=(document.getElementById("busca-lnk").value||"").toLowerCase().trim();
+  const filtro=document.getElementById("v-links").dataset.filtro||"todos";
+  const cont=document.getElementById("lista-lnk");
+  let arr=[...DB.links].sort((a,b)=>(b.criadoEm||0)-(a.criadoEm||0));
+  if(filtro==="nao")arr=arr.filter(l=>!l.visto);
+  else if(filtro==="visto")arr=arr.filter(l=>l.visto);
+  if(q)arr=arr.filter(l=>((l.titulo||"")+" "+(l.url||"")+" "+(l.categoria||"")).toLowerCase().includes(q));
+  atualizarContadorLinks();
+  if(DB.links.length===0){
+    cont.innerHTML=`<div class="empty"><div class="big">Nenhum link ainda</div>
+      <p>Adicione links de vídeos, artigos ou qualquer coisa que queira acessar depois.<br>Use "Importar" para trazer uma lista de uma vez.</p>
+      <button class="btn gold" onclick="abrirFormLink()">+ Adicionar primeiro link</button></div>`;return;
+  }
+  if(arr.length===0){cont.innerHTML=`<div class="empty"><p>Nenhum resultado para este filtro.</p></div>`;return;}
+  cont.innerHTML=arr.map(l=>{
+    let dominio="";
+    try{dominio=new URL(l.url).hostname.replace(/^www\./,"");}catch(e){}
+    return `<div class="item" id="lnk-${l.id}" onclick="this.classList.toggle('open')">
+      <div class="top">
+        <div style="min-width:0;flex:1">
+          <div class="word" style="font-size:15px;line-height:1.3">${esc(l.titulo||l.url)}</div>
+          <div class="prev" style="-webkit-line-clamp:1;font-family:var(--mono);font-size:11.5px">${esc(dominio)}${l.categoria?" · "+esc(l.categoria):""}</div>
+        </div>
+        <button class="toggle-visto ${l.visto?"on":""}" onclick="event.stopPropagation();toggleVisto('${l.id}')">${l.visto?"✓ Visto":"○ Ver"}</button>
+      </div>
+      <div class="expand">
+        <a href="${esc(l.url)}" target="_blank" rel="noopener" class="link-url" onclick="event.stopPropagation()">${esc(l.url)}</a>
+        ${l.notas?`<div style="margin-top:10px;font-size:14px;color:var(--muted);line-height:1.5">${esc(l.notas)}</div>`:""}
+        <div class="row-btns">
+          <button class="btn ghost sm" onclick="event.stopPropagation();abrirFormLink('${l.id}')">Editar</button>
+          <button class="btn terra sm" onclick="event.stopPropagation();apagarLink('${l.id}')">Apagar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+function toggleVisto(id){
+  const l=DB.links.find(x=>x.id===id);if(!l)return;
+  l.visto=!l.visto;salvar();
+  const btn=document.querySelector("#lnk-"+id+" .toggle-visto");
+  if(btn){btn.className="toggle-visto "+(l.visto?"on":"");btn.textContent=l.visto?"✓ Visto":"○ Ver";}
+  atualizarContadorLinks();
+  toast(l.visto?"Marcado como visto":"Desmarcado");
+}
+function setFiltroLink(f){
+  document.getElementById("v-links").dataset.filtro=f;
+  document.querySelectorAll(".lnk-chip").forEach(b=>b.classList.toggle("on",b.dataset.f===f));
+  renderLinks();
+}
+function apagarLink(id){
+  if(!confirm("Apagar este link?"))return;
+  DB.links=DB.links.filter(l=>l.id!==id);salvar();renderLinks();toast("Link apagado");
+}
+function abrirFormLink(id){
+  const l=id?DB.links.find(x=>x.id===id):null;
+  abrirSheet(`
+    <h2>${l?"Editar link":"Novo link"}</h2>
+    <div class="field"><label>URL</label>
+      <input id="f-url-lnk" type="url" value="${l?esc(l.url||""):""}" placeholder="https://…">
+      ${!l?`<div class="hint">Cole a URL e toque em Auto-título para preencher o nome.</div>`:""}
+    </div>
+    ${!l?`<button class="btn ghost sm" style="margin-bottom:14px" onclick="autoTitulo()" type="button">↺ Auto-título da URL</button>`:""}
+    <div class="field"><label>Título</label>
+      <input id="f-tit-lnk" value="${l?esc(l.titulo||""):""}" placeholder="Como você quer chamar este link">
+    </div>
+    <div class="field"><label>Categoria (opcional)</label>
+      <input id="f-cat-lnk" value="${l?esc(l.categoria||""):""}" placeholder="ex.: TED, YouTube, Artigo, Curso">
+    </div>
+    <div class="field"><label>Notas (opcional)</label>
+      <textarea id="f-not-lnk" placeholder="Por que salvou, o que achou…">${l?esc(l.notas||""):""}</textarea>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn ghost" onclick="fecharSheet()" type="button">Cancelar</button>
+      <button class="btn gold" onclick="salvarLink('${id||""}')" type="button">Salvar</button>
+    </div>`);
+  setTimeout(()=>document.getElementById("f-url-lnk").focus(),280);
+}
+function autoTitulo(){
+  const url=document.getElementById("f-url-lnk").value.trim();
+  if(!url){toast("Cole a URL primeiro");return;}
+  document.getElementById("f-tit-lnk").value=slugToTitulo(url);
+}
+function salvarLink(id){
+  const url=document.getElementById("f-url-lnk").value.trim();
+  if(!url){toast("Coloque a URL");return;}
+  const titulo=document.getElementById("f-tit-lnk").value.trim()||slugToTitulo(url);
+  const cat=document.getElementById("f-cat-lnk").value.trim();
+  const notas=document.getElementById("f-not-lnk").value.trim();
+  if(id){Object.assign(DB.links.find(x=>x.id===id),{url,titulo,categoria:cat,notas});}
+  else{DB.links.push({id:uid(),url,titulo,categoria:cat,notas,visto:false,criadoEm:Date.now()});}
+  salvar();fecharSheet();renderLinks();
+  toast(id?"Link atualizado":"Link salvo");
+}
+function abrirImportLinks(){
+  abrirSheet(`
+    <h2>Importar links</h2>
+    <div class="field"><label>URLs (uma por linha)</label>
+      <textarea id="imp-urls" style="min-height:150px" placeholder="https://www.ted.com/talks/…
+https://www.youtube.com/watch?v=…"></textarea>
+    </div>
+    <div class="field"><label>Categoria para todos (opcional)</label>
+      <input id="imp-cat-lnk" placeholder="ex.: TED, YouTube, Artigo">
+    </div>
+    <div class="hint">Título extraído automaticamente da URL. Duplicatas são ignoradas.</div>
+    <div class="sheet-actions">
+      <button class="btn ghost" onclick="fecharSheet()" type="button">Cancelar</button>
+      <button class="btn gold" onclick="processarImportLinks()" type="button">Importar</button>
+    </div>`);
+}
+function processarImportLinks(){
+  const raw=document.getElementById("imp-urls").value;
+  const cat=document.getElementById("imp-cat-lnk").value.trim();
+  const urls=raw.split(/[\n\r]+/).map(s=>s.trim()).filter(s=>{
+    if(!s||s.startsWith("#"))return false;
+    // só http(s), ignorar imagens e URLs com ] no final
+    s=s.replace(/\]$/,"");
+    try{const u=new URL(s);return u.protocol.startsWith("http");}catch(e){return false;}
+  }).map(s=>s.replace(/\]$/,"").trim());
+  const existentes=new Set(DB.links.map(l=>l.url));
+  let n=0;
+  urls.forEach(url=>{
+    if(existentes.has(url))return;
+    // ignorar URLs de imagem
+    if(/\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(url))return;
+    DB.links.push({id:uid(),url,titulo:slugToTitulo(url),categoria:cat||"TED",notas:"",visto:false,criadoEm:Date.now()});
+    existentes.add(url);n++;
+  });
+  if(n===0){toast("Nenhuma URL nova importada");return;}
+  salvar();fecharSheet();renderLinks();toast(n+" link(s) importado(s)");
+}
+
+
+function renderBackup(){
+  const total=DB.palavras.length;
+  const dom=DB.palavras.filter(dominada).length;
+  const estudo=DB.palavras.filter(p=>(p.revisoes||0)>0&&!dominada(p)).length;
+  const novas=DB.palavras.filter(p=>(p.revisoes||0)===0).length;
+  const hoje=DB.palavras.filter(venceHoje).length;
+  document.getElementById("stats").innerHTML=`
+    <div class="stat-box"><div class="n gold">${hoje}</div><div class="k">vencem hoje</div></div>
+    <div class="stat-box"><div class="n">${total}</div><div class="k">palavras</div></div>
+    <div class="stat-box"><div class="n green">${dom}</div><div class="k">dominadas</div></div>
+    <div class="stat-box"><div class="n">${estudo}</div><div class="k">em estudo</div></div>
+    <div class="stat-box"><div class="n">${novas}</div><div class="k">novas</div></div>
+    <div class="stat-box"><div class="n">${DB.anotacoes.length}</div><div class="k">anotações</div></div>
+    <div class="stat-box"><div class="n gold">${DB.links.length}</div><div class="k">links · ${DB.links.filter(l=>l.visto).length} vistos</div></div>`;
+}
+function jsonBackup(){return JSON.stringify(DB,null,2);}
+function copiarBackup(){
+  const txt=jsonBackup();
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>toast("Backup copiado")).catch(()=>fallbackCopy(txt));
+  }else fallbackCopy(txt);
+}
+function fallbackCopy(txt){
+  const ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");toast("Backup copiado");}catch(e){toast("Não foi possível copiar");}
+  document.body.removeChild(ta);
+}
+function baixarBackup(){
+  try{
+    const blob=new Blob([jsonBackup()],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    const d=new Date();
+    a.href=url;a.download=`lexico_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.json`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    toast("Arquivo gerado");
+  }catch(e){toast("Falha ao baixar — use Copiar");}
+}
+function baixarAppLexico(){
+  try{
+    const html=document.documentElement.outerHTML;
+    const blob=new Blob([html],{type:"text/html"});
+    const a=document.createElement("a");
+    const d=new Date();
+    a.href=URL.createObjectURL(blob);
+    a.download=`lexico_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.html`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    toast("Arquivo do aplicativo baixado");
+  }catch(e){toast("Falha ao baixar — tente pelo menu do navegador");}
+}
+
+function nomeBackup(){
+  const d=new Date();
+  return `lexico_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.json`;
+}
+async function compartilharBackup(){
+  try{
+    const file=new File([jsonBackup()],nomeBackup(),{type:"application/json"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:"Backup Léxico"});
+      return;
+    }
+  }catch(e){ if(e&&e.name==="AbortError")return; }
+  baixarBackup(); // fallback se o aparelho não suportar compartilhar arquivo
+}
+function restaurarBackup(){
+  const txt=document.getElementById("restore-area").value.trim();
+  if(!txt){toast("Cole o backup primeiro");return;}
+  let obj;
+  try{obj=JSON.parse(txt);}catch(e){toast("Texto inválido — não é um backup");return;}
+  if(!obj||!Array.isArray(obj.palavras)||!Array.isArray(obj.anotacoes)){toast("Backup não reconhecido");return;}
+  if(!confirm("Isso substitui TUDO que está aqui hoje. Continuar?"))return;
+  DB={versao:1,palavras:obj.palavras,anotacoes:obj.anotacoes,links:obj.links||[]};
+  salvar();document.getElementById("restore-area").value="";
+  renderBackup();toast("Backup restaurado");
+}
+function apagarTudo(){
+  if(!confirm("Apagar TODAS as palavras, anotações e links? Isso não tem volta."))return;
+  if(!confirm("Tem certeza mesmo? Faça um backup antes se tiver dúvida."))return;
+  DB={versao:1,palavras:[],anotacoes:[],links:[]};salvar();renderBackup();toast("Tudo apagado");
+}
+
+/* ---------- Busca (debounce simples) ---------- */
+document.getElementById("busca-pal").addEventListener("input",renderPalavras);
+document.getElementById("busca-not").addEventListener("input",renderNotas);
+document.getElementById("busca-lnk").addEventListener("input",renderLinks);
+
+/* ---------- Init ---------- */
+carregar();iniciarEstudo();
+</script>
+</body>
+</html>
